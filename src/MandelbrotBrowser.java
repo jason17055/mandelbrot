@@ -18,6 +18,7 @@ public class MandelbrotBrowser extends JFrame
 		b1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				v.zoomIn();
+				updateTitle();
 			}});
 		buttonPane.add(b1);
 
@@ -25,6 +26,7 @@ public class MandelbrotBrowser extends JFrame
 		b3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
 				v.zoomOut();
+				updateTitle();
 			}});
 		buttonPane.add(b3);
 
@@ -38,6 +40,13 @@ public class MandelbrotBrowser extends JFrame
 		pack();
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	}
+
+	void updateTitle()
+	{
+		setTitle(String.format("Depth %d",
+			v.ff[0][0].address.depth
+			));
 	}
 
 	public static void main(String [] args)

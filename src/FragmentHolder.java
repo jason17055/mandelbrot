@@ -5,6 +5,8 @@ import org.apfloat.*;
 
 class FragmentHolder
 {
+	FragmentAddress address;
+
 	Apcomplex origin;
 	Apfloat size;
 
@@ -24,16 +26,18 @@ class FragmentHolder
 
 	static FragmentHolder rootFragment()
 	{
-		return new FragmentHolder(
+		FragmentHolder f = new FragmentHolder(
 			new Apcomplex(
 				new Apfloat(-4),
 				new Apfloat(-4)
 				),
 			new Apfloat(8)
 			);
+		f.address = new FragmentAddress(0,0,0);
+		return f;
 	}
 
-	FragmentHolder(Apcomplex origin, Apfloat size)
+	protected FragmentHolder(Apcomplex origin, Apfloat size)
 	{
 		this.origin = origin;
 		this.size = size;
@@ -112,6 +116,11 @@ class FragmentHolder
 		}
 
 		FragmentHolder f = createInnerQuadrant(mx, my);
+		f.address = new FragmentAddress(
+			this.address.depth+1,
+			this.address.x * BRANCHING_FACTOR + mx,
+			this.address.y * BRANCHING_FACTOR + my
+			);
 		children[i] = new WeakReference<FragmentHolder>(f);
 		return f;
 	}

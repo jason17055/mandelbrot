@@ -1,8 +1,15 @@
 public class FragmentAddress
 {
-	int depth;
-	long x;
-	long y;
+	final int depth;
+	final long x;
+	final long y;
+
+	public FragmentAddress(int depth, long x, long y)
+	{
+		this.depth = depth;
+		this.x = x;
+		this.y = y;
+	}
 
 	@Override
 	public boolean equals(Object other)
