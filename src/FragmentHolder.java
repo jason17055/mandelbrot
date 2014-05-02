@@ -150,12 +150,12 @@ class FragmentHolder
 		this.parentY = py;
 	}
 
-	int get(int x, int y)
+	int getPixel(int x, int y)
 	{
 		switch (state) {
 		case READY: return colorOf(m.members[y][x]);
 		case ZOOM:
-			int c = parent.get((x+FSIZE*parentX)/2,
+			int c = parent.getPixel((x+FSIZE*parentX)/2,
 				(y+FSIZE*parentY)/2);
 			return c == 0 ? 0x666666 :
 				0xeeeeee;

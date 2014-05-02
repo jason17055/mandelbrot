@@ -323,7 +323,7 @@ public class MandelbrotView extends JComponent
 		BufferedImage img = new BufferedImage(FSIZE, FSIZE, BufferedImage.TYPE_INT_RGB);
 		for (int i = 0; i < FSIZE; i++) {
 			for (int j = 0; j < FSIZE; j++) {
-				img.setRGB(j,i,f.get(j,i));
+				img.setRGB(j,i,f.getPixel(j,i));
 			}
 		}
 
