@@ -225,11 +225,10 @@ class FragmentHolder
 		}
 	}
 
-	static int colorOf(byte b)
+	static int colorOf(byte x)
 	{
-		if (b == 0) { return 0; }
-		int x = b <= 30 ? 255 - 8*(b-1) : 0;
-		return 0xff0000 | (x << 8) | x;
+		if (x < 0) { return 0; }
+		return Roygbiv.colors[x % Roygbiv.colors.length];
 	}
 
 }

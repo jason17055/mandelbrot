@@ -8,6 +8,11 @@ public class MandelbrotFragment
 	int height;
 	byte [][] members;
 
+	static final byte YES = -1; //in the set
+	static final byte NO = 0;
+	static final byte MIXED = 64;
+	static final int BANDS = 64;
+
 	static final Apfloat ONE = new Apfloat(1);
 	static final Apfloat TWO = new Apfloat(2);
 	static final Apfloat MINUS_TWO_PT_FIVE = new Apfloat(-2.5);
@@ -91,10 +96,6 @@ public class MandelbrotFragment
 		}
 	}
 
-	static final byte YES = 0;
-	static final byte NO = 1;
-	static final byte MIXED = -1;
-
 	byte generateRow(int y, int x0, int x1)
 	{
 		byte sum = 0;
@@ -107,13 +108,13 @@ public class MandelbrotFragment
 				new Apcomplex(fx, fy)
 				);
 			if (x == x0) {
-				sum = members[y][x] == 0 ? YES : NO;
+				sum = members[y][x] == YES ? YES : NO;
 			}
 			else if (sum != MIXED) {
-				if (members[y][x] == 0 && sum != YES) {
+				if (members[y][x] == YES && sum != YES) {
 					sum = MIXED;
 				}
-				if (members[y][x] != 0 && sum != NO) {
+				if (members[y][x] != YES && sum == YES) {
 					sum = MIXED;
 				}
 			}
@@ -172,11 +173,9 @@ public class MandelbrotFragment
 			z = precisionHelper.multiply(z, z).add(c);
 			if (z.real().compareTo(TWO) > 0 ||
 				z.imag().compareTo(TWO) > 0) {
-				return (byte)(i > ESCAPE_THRESHOLD-20 ?
-					i-(ESCAPE_THRESHOLD-20) :
-					1);
+				return (byte)(i % BANDS);
 			}
 		}
-		return 0;
+		return YES;
 	}
 }
