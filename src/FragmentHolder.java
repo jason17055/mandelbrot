@@ -1,3 +1,4 @@
+import java.io.*;
 import java.lang.ref.*;
 import java.util.HashMap;
 import javax.swing.*;
@@ -222,6 +223,43 @@ class FragmentHolder
 			h.m = f;
 			h.state = HolderState.READY;
 			h.fireReady();
+
+			new FragmentSave(h).execute();
+		}
+	}
+
+	static File cacheDir = new File("cache");
+	static File getFragmentFile(FragmentAddress a)
+	{
+		return new File(cacheDir,
+			String.format("%d_%d,%d.dat",
+			a.depth,
+			a.x,
+			a.y)
+			);
+	}
+
+	static class FragmentSave extends SwingWorker<Void,Void>
+	{
+		FragmentHolder h;
+
+		FragmentSave(FragmentHolder h)
+		{
+			this.h = h;
+		}
+
+		@Override
+		public Void doInBackground()
+			throws IOException
+		{
+			OutputStream out = new BufferedOutputStream(
+				new FileOutputStream(
+					getFragmentFile(h.address)
+				));
+			h.m.writeTo(out);
+			out.close();
+
+			return null;
 		}
 	}
 

@@ -1,4 +1,5 @@
 import org.apfloat.*;
+import java.io.*;
 import java.util.ArrayList;
 
 public class MandelbrotFragment
@@ -48,18 +49,6 @@ public class MandelbrotFragment
 			width,
 			height
 		);
-	}
-
-	MandelbrotFragment neighbor(int dx, int dy)
-	{
-		Apfloat fx = new Apfloat(dx).multiply(scale).multiply(new Apfloat(width));
-		Apfloat fy = new Apfloat(dy).multiply(scale).multiply(new Apfloat(height));
-		return new MandelbrotFragment(
-			new Apcomplex(origin.real().add(fx),
-				origin.imag().add(fy)),
-			scale,
-			width,
-			height);
 	}
 
 	void generate()
@@ -157,25 +146,11 @@ public class MandelbrotFragment
 		return sum;
 	}
 
-	void deleteme()
-	{
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				Apcomplex p = new Apcomplex(
-					origin.real().add(scale.multiply(new Apfloat(j-width/2))),
-					origin.imag().add(scale.multiply(new Apfloat(i-height/2)))
-					);
-				members[i][j] = checkMandelbrot(p);
-			}
-		}
-	}
-
 	static final int ESCAPE_THRESHOLD = 50;
 
 	byte checkMandelbrot(Apcomplex c)
 	{
 		if (c.real().compareTo(ONE) > 0) return 1;
-		if (c.real().compareTo(MINUS_TWO_PT_FIVE) < 0) return 1;
 
 		Apcomplex z = Apcomplex.ZERO;
 		for (int i = 0; i < ESCAPE_THRESHOLD; i++) {
@@ -229,6 +204,14 @@ public class MandelbrotFragment
 		for (int X : a)
 		{
 			members[X/width][X%width] = UNLIKELY;
+		}
+	}
+
+	void writeTo(OutputStream out)
+		throws IOException
+	{
+		for (int i = 0; i < height; i++) {
+			out.write(members[i]);
 		}
 	}
 }
