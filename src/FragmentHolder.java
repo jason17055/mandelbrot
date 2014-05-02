@@ -278,8 +278,8 @@ class FragmentHolder
 		if (x == MandelbrotFragment.PROBABLY) {
 			return 0x777777;
 		}
-		else if (x == MandelbrotFragment.UNLIKELY) {
-			return 0xff88ff;
+		else if (x == MandelbrotFragment.MIXED) {
+			return 0xffaaff;
 		}
 		if (x < 0) { return 0; }
 		else { return 0xffffff; }

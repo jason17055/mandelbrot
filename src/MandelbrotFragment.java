@@ -16,8 +16,7 @@ public class MandelbrotFragment
 	static final byte PROBABLY = -2;
 	static final byte YES = -1; //in the set
 	static final byte NO = 0;
-	static final byte UNLIKELY = 64;
-	static final byte MIXED = 65;
+	static final byte MIXED = 64;
 
 	static final int BANDS = 64;
 
@@ -55,8 +54,8 @@ public class MandelbrotFragment
 
 		makeProbably();
 		makeProbably();
-		makeUnlikely();
-		makeUnlikely();
+		makeMixed();
+		makeMixed();
 	}
 
 	void generateBox(int x0, int y0, int x1, int y1, byte bottomEdge, byte rightEdge)
@@ -179,7 +178,7 @@ public class MandelbrotFragment
 		}
 	}
 
-	void makeUnlikely()
+	void makeMixed()
 	{
 		ArrayList<Integer> a = new ArrayList<Integer>();
 
@@ -197,7 +196,7 @@ public class MandelbrotFragment
 		}
 		for (int X : a)
 		{
-			members[X/width][X%width] = UNLIKELY;
+			members[X/width][X%width] = MIXED;
 		}
 	}
 
