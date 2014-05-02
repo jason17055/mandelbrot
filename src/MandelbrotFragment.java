@@ -1,4 +1,5 @@
 import org.apfloat.*;
+import java.util.ArrayList;
 
 public class MandelbrotFragment
 {
@@ -8,9 +9,12 @@ public class MandelbrotFragment
 	int height;
 	byte [][] members;
 
+	static final byte PROBABLY = -2;
 	static final byte YES = -1; //in the set
 	static final byte NO = 0;
-	static final byte MIXED = 64;
+	static final byte UNLIKELY = 64;
+	static final byte MIXED = 65;
+
 	static final int BANDS = 64;
 
 	static final Apfloat ONE = new Apfloat(1);
@@ -65,6 +69,11 @@ public class MandelbrotFragment
 		byte lastRow = generateRow(height-1, 0, width);
 		byte lastCol = generateColumn(width-1, 0, height-1);
 		generateBox(0, 0, width-1, height-1, lastRow, lastCol);
+
+		makeProbably();
+		makeProbably();
+		makeUnlikely();
+		makeUnlikely();
 	}
 
 	void generateBox(int x0, int y0, int x1, int y1, byte bottomEdge, byte rightEdge)
@@ -177,5 +186,49 @@ public class MandelbrotFragment
 			}
 		}
 		return YES;
+	}
+
+	void makeProbably()
+	{
+		ArrayList<Integer> probably = new ArrayList<Integer>();
+
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if (members[i][j] != YES) { continue; }
+				if ((i > 0 && members[i-1][j] != YES) ||
+				    (i+1 < height && members[i+1][j] != YES) ||
+				    (j > 0 && members[i][j-1] != YES) ||
+				    (j+1 < width && members[i][j+1] != YES)
+				) {
+					probably.add(i*width+j);
+				}
+			}
+		}
+		for (int X : probably)
+		{
+			members[X/width][X%width] = PROBABLY;
+		}
+	}
+
+	void makeUnlikely()
+	{
+		ArrayList<Integer> a = new ArrayList<Integer>();
+
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				if (members[i][j] < 0) { continue; }
+				if ((i > 0 && members[i-1][j] < 0) ||
+				    (i+1 < height && members[i+1][j] < 0) ||
+				    (j > 0 && members[i][j-1] < 0) ||
+				    (j+1 < width && members[i][j+1] < 0)
+				) {
+					a.add(i*width+j);
+				}
+			}
+		}
+		for (int X : a)
+		{
+			members[X/width][X%width] = UNLIKELY;
+		}
 	}
 }

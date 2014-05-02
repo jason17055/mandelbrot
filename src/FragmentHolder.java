@@ -227,8 +227,15 @@ class FragmentHolder
 
 	static int colorOf(byte x)
 	{
+		if (x == MandelbrotFragment.PROBABLY) {
+			return 0x777777;
+		}
+		else if (x == MandelbrotFragment.UNLIKELY) {
+			return 0xff88ff;
+		}
 		if (x < 0) { return 0; }
-		return Roygbiv.colors[x % Roygbiv.colors.length];
+		else { return 0xffffff; }
+		//return Roygbiv.colors[x % Roygbiv.colors.length];
 	}
 
 }
