@@ -6,8 +6,10 @@ import javax.swing.*;
 import org.apfloat.*;
 
 public class MandelbrotView extends JComponent
+	implements FragmentHolder.Listener
 {
-	static final int FSIZE = 128;
+	static final int FSIZE = FragmentHolder.FSIZE;
+
 	int vscale = 1;
 	int offsetX = 0;
 	int offsetY = 0;
@@ -68,9 +70,13 @@ public class MandelbrotView extends JComponent
 				Apfloat im0 = ff[i][j].origin.imag();
 
 				aa[i*2+0][j*2+0] = ff[i][j].innerQuadrant(0,0);
+				aa[i*2+0][j*2+0].addListener(this);
 				aa[i*2+0][j*2+1] = ff[i][j].innerQuadrant(1,0);
+				aa[i*2+0][j*2+1].addListener(this);
 				aa[i*2+1][j*2+0] = ff[i][j].innerQuadrant(0,1);
+				aa[i*2+1][j*2+0].addListener(this);
 				aa[i*2+1][j*2+1] = ff[i][j].innerQuadrant(1,1);
+				aa[i*2+1][j*2+1].addListener(this);
 			}
 		}
 
@@ -88,13 +94,6 @@ public class MandelbrotView extends JComponent
 	public Dimension getPreferredSize()
 	{
 		return new Dimension(640,480);
-	}
-
-	static int colorOf(byte b)
-	{
-		if (b == 0) { return 0; }
-		int x = b <= 30 ? 255 - 8*(b-1) : 0;
-		return 0xff0000 | (x << 8) | x;
 	}
 
 	void shrinkNorth(int count)
@@ -144,6 +143,7 @@ public class MandelbrotView extends JComponent
 			for (int j = 0; j < fragmentColumns; j++) {
 
 				a[i][j] = ff[0][j].neighbor(0,-count+i);
+				a[i][j].addListener(this);
 			}
 		}
 		System.arraycopy(ff, 0, a, count, fragmentRows);
@@ -163,6 +163,7 @@ public class MandelbrotView extends JComponent
 			for (int j = 0; j < fragmentColumns; j++) {
 
 				a[i][j] = ff[fragmentRows-1][j].neighbor(0,1+i-fragmentRows);
+				a[i][j].addListener(this);
 			}
 		}
 		ff = a;
@@ -178,6 +179,7 @@ public class MandelbrotView extends JComponent
 
 			for (int j = fragmentColumns; j < a.length; j++) {
 				a[j] = a[fragmentColumns-1].neighbor(1+j-fragmentColumns,0);
+				a[j].addListener(this);
 			}
 			ff[i] = a;
 		}
@@ -193,6 +195,7 @@ public class MandelbrotView extends JComponent
 
 			for (int j = 0; j < count; j++) {
 				ff[i][j] = ff[i][j+count].neighbor(-count+j,0);
+				ff[i][j].addListener(this);
 			}
 		}
 		offsetX -= count*FSIZE;
@@ -270,116 +273,8 @@ public class MandelbrotView extends JComponent
 		gr.drawRect(x, y, FSIZE*vscale, FSIZE*vscale);
 	}
 
-	static enum HolderState
+	public void fragmentReady(FragmentHolder f)
 	{
-		INIT,
-		ZOOM,
-		READY;
-	}
-
-	static class FragmentGen extends SwingWorker<MandelbrotFragment,Object>
-	{
-		FragmentHolder h;
-		MandelbrotFragment f;
-
-		FragmentGen(FragmentHolder h)
-		{
-			this.h = h;
-		}
-
-		@Override
-		public MandelbrotFragment doInBackground()
-		{
-			f = new MandelbrotFragment(
-				h.origin.real(),
-				h.origin.imag(),
-				h.origin.real().add(h.size),
-				h.origin.imag().add(h.size),
-				FSIZE, FSIZE);
-			return f;
-		}
-
-		@Override
-		protected void done() {
-			h.m = f;
-			h.state = HolderState.READY;
-			h.fireReady();
-		}
-	}
-
-	class FragmentHolder
-	{
-		Apcomplex origin;
-		Apfloat size;
-
-		HolderState state = HolderState.INIT;
-		MandelbrotFragment m;
-
-		// valid only if state == ZOOM
-		FragmentHolder parent;
-		int parentX;
-		int parentY;
-
-		FragmentHolder(Apcomplex origin, Apfloat size)
-		{
-			this.origin = origin;
-			this.size = size;
-
-			new FragmentGen(this).execute();
-		}
-
-		FragmentHolder neighbor(int dx, int dy)
-		{
-			Apfloat fx = size.multiply(new Apfloat(dx));
-			Apfloat fy = size.multiply(new Apfloat(dy));
-
-			return new FragmentHolder(
-				new Apcomplex(
-					origin.real().add(fx),
-					origin.imag().add(fy)
-					),
-				size);
-		}
-
-		FragmentHolder innerQuadrant(int ax, int ay)
-		{
-			Apfloat hsize = this.size.divide(new Apfloat(2));
-			Apfloat re0 = this.origin.real();
-			Apfloat im0 = this.origin.imag();
-
-			FragmentHolder h = new FragmentHolder(
-				new Apcomplex(
-					origin.real().add(hsize.multiply(new Apfloat(ax))),
-					origin.imag().add(hsize.multiply(new Apfloat(ay)))
-					),
-				hsize);
-			h.state = HolderState.ZOOM;
-			h.setParent(this, ax, ay);
-			return h;
-		}
-
-		void setParent(FragmentHolder h, int px, int py)
-		{
-			this.parent = h;
-			this.parentX = px;
-			this.parentY = py;
-		}
-
-		int get(int x, int y)
-		{
-			switch (state) {
-			case READY: return colorOf(m.members[y][x]);
-			case ZOOM:
-				return parent.get((x+FSIZE*parentX)/2,
-					(y+FSIZE*parentY)/2);
-			default:
-				return 0xeeeeee;
-			}
-		}
-
-		void fireReady()
-		{
-			repaint();
-		}
+		repaint();
 	}
 }
