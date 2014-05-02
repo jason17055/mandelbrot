@@ -1,0 +1,60 @@
+<!--
+// This file is part of Dragonfin Nurikabe.
+// Copyright (C) 2014 Jason Long
+-->
+<project name="mandelbrot" default="all">
+
+<property name="package-version" value="0.1" />
+
+<property name="distfile" value="${ant.project.name}.jar" />
+
+<path id="build-classpath">
+  <fileset dir="extlib">
+    <include name="*.jar" />
+  </fileset>
+</path>
+
+<target name="init-builddir">
+<mkdir dir="build" />
+<mkdir dir="extlib" />
+</target>
+
+<target name="compile" depends="init-builddir">
+<javac srcdir="src"
+       destdir="build"
+       classpathref="build-classpath"
+	includeantruntime="false"
+	debug="true" debuglevel="lines,vars,source"
+	source="1.7" target="1.7"
+       >
+	<compilerarg value="-Xlint:unchecked" />
+	<compilerarg value="-Xlint:deprecation" />
+</javac>
+</target>
+
+<target name="build" depends="compile">
+<pathconvert property="runtime-classpath" pathsep=" " refid="build-classpath">
+<map from="${basedir}" to="." />
+</pathconvert>
+
+<jar destfile="${distfile}" basedir="build">
+	<manifest>
+		<attribute name="Main-Class" value="MandelbrotBrowser" />
+		<attribute name="Class-Path" value="${runtime-classpath}" />
+		<attribute name="Implementation-Version" value="${package-version}" />
+	</manifest>
+</jar>
+</target>
+
+<target name="all" depends="build">
+</target>
+
+<target name="clean">
+<delete dir="build" />
+<delete file="${distfile}" />
+<delete>
+	<fileset dir="." includes="${ant.project.name}*.zip" />
+</delete>
+</target>
+
+</project>
