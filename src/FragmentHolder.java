@@ -208,12 +208,23 @@ class FragmentHolder
 
 		@Override
 		public MandelbrotFragment doInBackground()
+			throws IOException
 		{
-			f = new MandelbrotFragment(
-				h.originX,
-				h.originY,
-				h.size,
-				FSIZE, FSIZE);
+			File fl = getFragmentFile(h.address);
+			if (fl.exists()) {
+				InputStream in = new BufferedInputStream(
+					new FileInputStream(fl)
+					);
+				f = MandelbrotFragment.readFrom(in, FSIZE);
+				in.close();
+			}
+			else {
+				f = new MandelbrotFragment(
+					h.originX,
+					h.originY,
+					h.size,
+					FSIZE, FSIZE);
+			}
 			return f;
 		}
 
