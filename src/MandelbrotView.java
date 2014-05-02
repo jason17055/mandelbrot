@@ -56,8 +56,12 @@ public class MandelbrotView extends JComponent
 
 	public void reset()
 	{
+		if (ff != null) {
+			unsubscribeAll();
+		}
+
 		ff = new FragmentHolder[fragmentRows][fragmentColumns];
-		ff[0][0] = FragmentHolder.rootFragment();
+		ff[0][0] = subscribe(FragmentHolder.rootFragment());
 		offsetX = -FSIZE/2;
 		offsetY = -FSIZE/2;
 		repaint();
@@ -65,18 +69,16 @@ public class MandelbrotView extends JComponent
 
 	public void zoomIn()
 	{
+		unsubscribeAll();
+
 		FragmentHolder[][] aa = new FragmentHolder[fragmentRows*2][fragmentColumns*2];
 		for (int i = 0; i < fragmentRows; i++) {
 			for (int j = 0; j < fragmentColumns; j++) {
 
-				aa[i*2+0][j*2+0] = ff[i][j].getChild(0,0);
-				aa[i*2+0][j*2+0].addListener(this);
-				aa[i*2+0][j*2+1] = ff[i][j].getChild(1,0);
-				aa[i*2+0][j*2+1].addListener(this);
-				aa[i*2+1][j*2+0] = ff[i][j].getChild(0,1);
-				aa[i*2+1][j*2+0].addListener(this);
-				aa[i*2+1][j*2+1] = ff[i][j].getChild(1,1);
-				aa[i*2+1][j*2+1].addListener(this);
+				aa[i*2+0][j*2+0] = subscribe(ff[i][j].getChild(0,0));
+				aa[i*2+0][j*2+1] = subscribe(ff[i][j].getChild(1,0));
+				aa[i*2+1][j*2+0] = subscribe(ff[i][j].getChild(0,1));
+				aa[i*2+1][j*2+1] = subscribe(ff[i][j].getChild(1,1));
 			}
 		}
 
@@ -97,11 +99,7 @@ public class MandelbrotView extends JComponent
 			return;
 		}
 
-		for (int i = 0; i < fragmentRows; i++) {
-			for (int j = 0; j < fragmentColumns; j++) {
-				unsubscribe(ff[i][j]);
-			}
-		}
+		unsubscribeAll();
 
 		fragmentRows = (fragmentRows+1) / 2;
 		fragmentColumns = (fragmentColumns+1) / 2;
@@ -131,6 +129,10 @@ public class MandelbrotView extends JComponent
 	{
 		assert count < fragmentRows;
 
+		for (int i = 0; i < count; i++) {
+			unsubscribeRow(i);
+		}
+
 		ff = Arrays.copyOfRange(ff, count, ff.length);
 		offsetY += count*FSIZE;
 		fragmentRows -= count;
@@ -139,6 +141,10 @@ public class MandelbrotView extends JComponent
 	void shrinkSouth(int count)
 	{
 		assert count < fragmentRows;
+
+		for (int i = fragmentRows-count; i < fragmentRows; i++) {
+			unsubscribeRow(i);
+		}
 
 		ff = Arrays.copyOfRange(ff, 0, fragmentRows-count);
 		fragmentRows -= count;
@@ -149,6 +155,9 @@ public class MandelbrotView extends JComponent
 		assert count < fragmentColumns;
 
 		for (int i = 0; i < fragmentRows; i++) {
+			for (int j = fragmentColumns-count; j < fragmentColumns; j++) {
+				unsubscribe(ff[i][j]);
+			}
 			ff[i] = Arrays.copyOfRange(ff[i], 0, fragmentColumns-count);
 		}
 		fragmentColumns -= count;
@@ -159,6 +168,9 @@ public class MandelbrotView extends JComponent
 		assert count < fragmentColumns;
 
 		for (int i = 0; i < fragmentRows; i++) {
+			for (int j = 0; j < count; j++) {
+				unsubscribe(ff[i][j]);
+			}
 			ff[i] = Arrays.copyOfRange(ff[i], count, ff[i].length);
 		}
 		offsetX += count*FSIZE;
@@ -212,6 +224,22 @@ public class MandelbrotView extends JComponent
 			ff[i] = a;
 		}
 		fragmentColumns += count;
+	}
+
+	void unsubscribeAll()
+	{
+		for (int i = 0; i < fragmentRows; i++) {
+			for (int j = 0; j < fragmentColumns; j++) {
+				unsubscribe(ff[i][j]);
+			}
+		}
+	}
+
+	void unsubscribeRow(int i)
+	{
+		for (int j = 0; j < fragmentColumns; j++) {
+			unsubscribe(ff[i][j]);
+		}
 	}
 
 	void unsubscribe(FragmentHolder f)

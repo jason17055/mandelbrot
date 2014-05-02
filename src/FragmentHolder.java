@@ -179,7 +179,7 @@ class FragmentHolder
 
 	void addListener(Listener l)
 	{
-		assert this.listener == null || this.listener == l;
+		assert this.listener == null;
 		this.listener = l;
 	}
 
