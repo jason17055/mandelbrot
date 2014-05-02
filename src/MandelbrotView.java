@@ -63,11 +63,6 @@ public class MandelbrotView extends JComponent
 		repaint();
 	}
 
-	public void refine()
-	{
-		zoomIn();
-	}
-
 	public void zoomIn()
 	{
 		FragmentHolder[][] aa = new FragmentHolder[fragmentRows*2][fragmentColumns*2];
@@ -94,6 +89,32 @@ public class MandelbrotView extends JComponent
 		fsize = ff[0][0].size;
 		offsetX *= 2;
 		offsetY *= 2;
+
+		repaint();
+	}
+
+	public void zoomOut()
+	{
+		for (int i = 0; i < fragmentRows; i++) {
+			for (int j = 0; j < fragmentColumns; j++) {
+				unsubscribe(ff[i][j]);
+			}
+		}
+
+		fragmentRows = (fragmentRows+1) / 2;
+		fragmentColumns = (fragmentColumns+1) / 2;
+		FragmentHolder[][] aa = new FragmentHolder[fragmentRows][fragmentColumns];
+		for (int i = 0; i < fragmentRows; i++) {
+			for (int j = 0; j < fragmentColumns; j++) {
+
+				aa[i][j] = subscribe(ff[i*2][j*2].parent);
+			}
+		}
+
+		ff = aa;
+		fsize = ff[0][0].size;
+		offsetX /= 2;
+		offsetY /= 2;
 
 		repaint();
 	}
@@ -189,6 +210,11 @@ public class MandelbrotView extends JComponent
 			ff[i] = a;
 		}
 		fragmentColumns += count;
+	}
+
+	void unsubscribe(FragmentHolder f)
+	{
+		f.removeListener(this);
 	}
 
 	FragmentHolder subscribe(FragmentHolder f)

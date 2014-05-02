@@ -21,6 +21,13 @@ public class MandelbrotBrowser extends JFrame
 			}});
 		buttonPane.add(b1);
 
+		JButton b3 = new JButton("Zoom Out");
+		b3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				v.zoomOut();
+			}});
+		buttonPane.add(b3);
+
 		JButton b2 = new JButton("Reset");
 		b2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {

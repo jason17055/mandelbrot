@@ -165,6 +165,12 @@ class FragmentHolder
 		}
 	}
 
+	void removeListener(Listener l)
+	{
+		assert this.listener == l;
+		this.listener = null;
+	}
+
 	void addListener(Listener l)
 	{
 		assert this.listener == null || this.listener == l;
