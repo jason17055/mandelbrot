@@ -4,11 +4,14 @@ import java.util.ArrayList;
 
 public class MandelbrotFragment
 {
-	Apcomplex origin;
-	Apfloat scale;
 	int width;
 	int height;
 	byte [][] members;
+
+	// only used for new constructions
+	Apfloat originX; //min Real component
+	Apfloat originY; //min Imag component
+	Apfloat scale;
 
 	static final byte PROBABLY = -2;
 	static final byte YES = -1; //in the set
@@ -29,26 +32,17 @@ public class MandelbrotFragment
 	{
 	}
 
-	public MandelbrotFragment(Apcomplex origin, Apfloat scale, int width, int height)
+	public MandelbrotFragment(Apfloat re0, Apfloat im0, Apfloat size, int width, int height)
 	{
-		this.origin = origin;
-		this.scale = scale;
+		assert width == height;
+
+		this.originX = re0;
+		this.originY = im0;
+		this.scale = size.divide(new Apfloat(width));
 		this.width = width;
 		this.height = height;
-		generate();
-	}
 
-	public MandelbrotFragment(Apfloat re0, Apfloat im0, Apfloat re1, Apfloat im1, int width, int height)
-	{
-		this(
-			new Apcomplex(
-				re0.add(re1).divide(new Apfloat(2)),
-				im0.add(im1).divide(new Apfloat(2))
-				),
-			re1.subtract(re0).divide(new Apfloat(width)),
-			width,
-			height
-		);
+		generate();
 	}
 
 	void generate()
@@ -98,10 +92,10 @@ public class MandelbrotFragment
 	{
 		byte sum = 0;
 
-		Apfloat fy = origin.imag().add(scale.multiply(new Apfloat(y-height/2)));
+		Apfloat fy = originY.add(scale.multiply(new Apfloat(y)));
 
 		for (int x = x0; x < x1; x++) {
-			Apfloat fx = origin.real().add(scale.multiply(new Apfloat(x-width/2)));
+			Apfloat fx = originX.add(scale.multiply(new Apfloat(x)));
 			members[y][x] = checkMandelbrot(
 				new Apcomplex(fx, fy)
 				);
@@ -124,10 +118,10 @@ public class MandelbrotFragment
 	{
 		byte sum = 0;
 
-		Apfloat fx = origin.real().add(scale.multiply(new Apfloat(x-width/2)));
+		Apfloat fx = originX.add(scale.multiply(new Apfloat(x)));
 
 		for (int y = y0; y < y1; y++) {
-			Apfloat fy = origin.imag().add(scale.multiply(new Apfloat(y-height/2)));
+			Apfloat fy = originY.add(scale.multiply(new Apfloat(y)));
 			members[y][x] = checkMandelbrot(
 				new Apcomplex(fx, fy)
 				);
@@ -212,6 +206,33 @@ public class MandelbrotFragment
 	{
 		for (int i = 0; i < height; i++) {
 			out.write(members[i]);
+		}
+	}
+
+	static MandelbrotFragment readFrom(InputStream in, int pixelWidth)
+		throws IOException
+	{
+		MandelbrotFragment m = new MandelbrotFragment();
+		m.width = pixelWidth;
+		m.height = pixelWidth;
+		m.readFromReal(in);
+		return m;
+	}
+
+	void readFromReal(InputStream in)
+		throws IOException
+	{
+		members = new byte[height][width];
+		for (int i = 0; i < height; i++) {
+			byte [] bb = members[i];
+			int len = 0;
+			while (len < width) {
+				int nread = in.read(bb, len, width-len);
+				if (nread == -1) {
+					throw new IOException("early eof");
+				}
+				len += nread;
+			}
 		}
 	}
 }

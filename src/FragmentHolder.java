@@ -212,8 +212,7 @@ class FragmentHolder
 			f = new MandelbrotFragment(
 				h.originX,
 				h.originY,
-				h.originX.add(h.size),
-				h.originY.add(h.size),
+				h.size,
 				FSIZE, FSIZE);
 			return f;
 		}

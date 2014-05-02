@@ -92,6 +92,11 @@ public class MandelbrotView extends JComponent
 
 	public void zoomOut()
 	{
+		if (ff[0][0].parent == null) {
+			// can't zoom out
+			return;
+		}
+
 		for (int i = 0; i < fragmentRows; i++) {
 			for (int j = 0; j < fragmentColumns; j++) {
 				unsubscribe(ff[i][j]);
