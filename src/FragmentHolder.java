@@ -7,7 +7,8 @@ class FragmentHolder
 {
 	FragmentAddress address;
 
-	Apcomplex origin;
+	Apfloat originX; //min X (real component)
+	Apfloat originY; //min Y (imaginary component)
 	Apfloat size;
 
 	HolderState state = HolderState.INIT;
@@ -27,19 +28,18 @@ class FragmentHolder
 	static FragmentHolder rootFragment()
 	{
 		FragmentHolder f = new FragmentHolder(
-			new Apcomplex(
-				new Apfloat(-4),
-				new Apfloat(-4)
-				),
+			new Apfloat(-4),
+			new Apfloat(-4),
 			new Apfloat(8)
 			);
 		f.address = new FragmentAddress(0,0,0);
 		return f;
 	}
 
-	protected FragmentHolder(Apcomplex origin, Apfloat size)
+	protected FragmentHolder(Apfloat originX, Apfloat originY, Apfloat size)
 	{
-		this.origin = origin;
+		this.originX = originX;
+		this.originY = originY;
 		this.size = size;
 
 		new FragmentGen(this).execute();
@@ -127,15 +127,11 @@ class FragmentHolder
 
 	FragmentHolder createInnerQuadrant(int ax, int ay)
 	{
-		Apfloat hsize = this.size.divide(new Apfloat(2));
-		Apfloat re0 = this.origin.real();
-		Apfloat im0 = this.origin.imag();
+		Apfloat hsize = this.size.divide(new Apfloat(BRANCHING_FACTOR));
 
 		FragmentHolder h = new FragmentHolder(
-			new Apcomplex(
-				origin.real().add(hsize.multiply(new Apfloat(ax))),
-				origin.imag().add(hsize.multiply(new Apfloat(ay)))
-				),
+			originX.add(hsize.multiply(new Apfloat(ax))),
+			originY.add(hsize.multiply(new Apfloat(ay))),
 			hsize);
 		h.state = HolderState.ZOOM;
 		h.setParent(this, ax, ay);
@@ -213,10 +209,10 @@ class FragmentHolder
 		public MandelbrotFragment doInBackground()
 		{
 			f = new MandelbrotFragment(
-				h.origin.real(),
-				h.origin.imag(),
-				h.origin.real().add(h.size),
-				h.origin.imag().add(h.size),
+				h.originX,
+				h.originY,
+				h.originX.add(h.size),
+				h.originY.add(h.size),
 				FSIZE, FSIZE);
 			return f;
 		}

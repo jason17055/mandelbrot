@@ -69,9 +69,6 @@ public class MandelbrotView extends JComponent
 		for (int i = 0; i < fragmentRows; i++) {
 			for (int j = 0; j < fragmentColumns; j++) {
 
-				Apfloat re0 = ff[i][j].origin.real();
-				Apfloat im0 = ff[i][j].origin.imag();
-
 				aa[i*2+0][j*2+0] = ff[i][j].getChild(0,0);
 				aa[i*2+0][j*2+0].addListener(this);
 				aa[i*2+0][j*2+1] = ff[i][j].getChild(1,0);
