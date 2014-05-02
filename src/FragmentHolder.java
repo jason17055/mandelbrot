@@ -1,3 +1,5 @@
+import java.lang.ref.*;
+import java.util.HashMap;
 import javax.swing.*;
 import org.apfloat.*;
 
@@ -15,6 +17,21 @@ class FragmentHolder
 	int parentY;
 
 	static final int FSIZE = 128;
+	static final int BRANCHING_FACTOR = 2;
+
+	@SuppressWarnings("unchecked")
+	WeakReference<FragmentHolder> children[] = new WeakReference[BRANCHING_FACTOR*BRANCHING_FACTOR];
+
+	static FragmentHolder rootFragment()
+	{
+		return new FragmentHolder(
+			new Apcomplex(
+				new Apfloat(-4),
+				new Apfloat(-4)
+				),
+			new Apfloat(8)
+			);
+	}
 
 	FragmentHolder(Apcomplex origin, Apfloat size)
 	{
@@ -24,20 +41,82 @@ class FragmentHolder
 		new FragmentGen(this).execute();
 	}
 
-	FragmentHolder neighbor(int dx, int dy)
+	boolean hasNeighbor(int dx, int dy)
 	{
-		Apfloat fx = size.multiply(new Apfloat(dx));
-		Apfloat fy = size.multiply(new Apfloat(dy));
+		if (dx == 0 && dy == 0) {
+			return true;
+		}
+		else if (parent != null) {
 
-		return new FragmentHolder(
-			new Apcomplex(
-				origin.real().add(fx),
-				origin.imag().add(fy)
-				),
-			size);
+			dx += parentX;
+			dy += parentY;
+			int px = dx >= 0 ? dx / BRANCHING_FACTOR :
+				(dx-1) / BRANCHING_FACTOR;
+			int py = dy >= 0 ? dy / BRANCHING_FACTOR :
+				(dy-1) / BRANCHING_FACTOR;
+			return parent.hasNeighbor(px, py);
+		}
+		else {
+			// root fragment has no neighbors
+			return false;
+		}
 	}
 
-	FragmentHolder innerQuadrant(int ax, int ay)
+	FragmentHolder getNeighbor(int dx, int dy)
+	{
+		assert !(dx == 0 && dy == 0);
+
+		if (parent != null) {
+			return parent.getChild(parentX+dx, parentY+dy);
+		}
+		else {
+			// root fragment has no neighbors
+			return null;
+		}
+	}
+
+
+	FragmentHolder getChild(int cx, int cy)
+	{
+		int px = cx >= 0 ? cx / BRANCHING_FACTOR :
+			(cx-1) / BRANCHING_FACTOR;
+		int mx = cx - (px*BRANCHING_FACTOR);
+
+		int py = cy >= 0 ? cy / BRANCHING_FACTOR :
+			(cy-1) / BRANCHING_FACTOR;
+		int my = cy - (py*BRANCHING_FACTOR);
+
+		if (px == 0 && py == 0) {
+			return this.getChildReal(mx, my);
+		}
+		else if (parent != null) {
+			return getNeighbor(px, py).getChildReal(mx, my);
+		}
+		else {
+			// root fragment has no neighbor children
+			return null;
+		}
+	}
+
+	FragmentHolder getChildReal(int mx, int my)
+	{
+		assert mx >= 0 && mx < BRANCHING_FACTOR;
+		assert my >= 0 && my < BRANCHING_FACTOR;
+
+		int i = my*BRANCHING_FACTOR+mx;
+		if (children[i] != null) {
+			FragmentHolder f = children[i].get();
+			if (f != null) {
+				return f;
+			}
+		}
+
+		FragmentHolder f = createInnerQuadrant(mx, my);
+		children[i] = new WeakReference<FragmentHolder>(f);
+		return f;
+	}
+
+	FragmentHolder createInnerQuadrant(int ax, int ay)
 	{
 		Apfloat hsize = this.size.divide(new Apfloat(2));
 		Apfloat re0 = this.origin.real();
@@ -56,6 +135,10 @@ class FragmentHolder
 
 	void setParent(FragmentHolder h, int px, int py)
 	{
+		assert h != null;
+		assert px >= 0 && px < BRANCHING_FACTOR;
+		assert py >= 0 && py < BRANCHING_FACTOR;
+
 		this.parent = h;
 		this.parentX = px;
 		this.parentY = py;
@@ -66,8 +149,10 @@ class FragmentHolder
 		switch (state) {
 		case READY: return colorOf(m.members[y][x]);
 		case ZOOM:
-			return parent.get((x+FSIZE*parentX)/2,
+			int c = parent.get((x+FSIZE*parentX)/2,
 				(y+FSIZE*parentY)/2);
+			return c == 0 ? 0x666666 :
+				0xeeeeee;
 		default:
 			return 0xeeeeee;
 		}
@@ -82,7 +167,7 @@ class FragmentHolder
 
 	void addListener(Listener l)
 	{
-		assert this.listener == null;
+		assert this.listener == null || this.listener == l;
 		this.listener = l;
 	}
 

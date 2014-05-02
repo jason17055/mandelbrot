@@ -20,8 +20,7 @@ public class MandelbrotView extends JComponent
 
 	public MandelbrotView()
 	{
-		ff = new FragmentHolder[fragmentRows][fragmentColumns];
-		ff[0][0] = new FragmentHolder(Apcomplex.ZERO, fsize);
+		reset();
 
 		MouseAdapter mouse = new MouseAdapter() {
 		public void mousePressed(MouseEvent evt) {
@@ -55,6 +54,15 @@ public class MandelbrotView extends JComponent
 		repaint();
 	}
 
+	public void reset()
+	{
+		ff = new FragmentHolder[fragmentRows][fragmentColumns];
+		ff[0][0] = FragmentHolder.rootFragment();
+		offsetX = -FSIZE/2;
+		offsetY = -FSIZE/2;
+		repaint();
+	}
+
 	public void refine()
 	{
 		zoomIn();
@@ -69,13 +77,13 @@ public class MandelbrotView extends JComponent
 				Apfloat re0 = ff[i][j].origin.real();
 				Apfloat im0 = ff[i][j].origin.imag();
 
-				aa[i*2+0][j*2+0] = ff[i][j].innerQuadrant(0,0);
+				aa[i*2+0][j*2+0] = ff[i][j].getChild(0,0);
 				aa[i*2+0][j*2+0].addListener(this);
-				aa[i*2+0][j*2+1] = ff[i][j].innerQuadrant(1,0);
+				aa[i*2+0][j*2+1] = ff[i][j].getChild(1,0);
 				aa[i*2+0][j*2+1].addListener(this);
-				aa[i*2+1][j*2+0] = ff[i][j].innerQuadrant(0,1);
+				aa[i*2+1][j*2+0] = ff[i][j].getChild(0,1);
 				aa[i*2+1][j*2+0].addListener(this);
-				aa[i*2+1][j*2+1] = ff[i][j].innerQuadrant(1,1);
+				aa[i*2+1][j*2+1] = ff[i][j].getChild(1,1);
 				aa[i*2+1][j*2+1].addListener(this);
 			}
 		}
@@ -142,8 +150,7 @@ public class MandelbrotView extends JComponent
 			a[i] = new FragmentHolder[fragmentColumns];
 			for (int j = 0; j < fragmentColumns; j++) {
 
-				a[i][j] = ff[0][j].neighbor(0,-count+i);
-				a[i][j].addListener(this);
+				a[i][j] = subscribe(ff[0][j].getNeighbor(0,-count+i));
 			}
 		}
 		System.arraycopy(ff, 0, a, count, fragmentRows);
@@ -162,8 +169,7 @@ public class MandelbrotView extends JComponent
 			a[i] = new FragmentHolder[fragmentColumns];
 			for (int j = 0; j < fragmentColumns; j++) {
 
-				a[i][j] = ff[fragmentRows-1][j].neighbor(0,1+i-fragmentRows);
-				a[i][j].addListener(this);
+				a[i][j] = subscribe(ff[fragmentRows-1][j].getNeighbor(0,1+i-fragmentRows));
 			}
 		}
 		ff = a;
@@ -178,12 +184,39 @@ public class MandelbrotView extends JComponent
 			System.arraycopy(ff[i], 0, a, 0, ff[i].length);
 
 			for (int j = fragmentColumns; j < a.length; j++) {
-				a[j] = a[fragmentColumns-1].neighbor(1+j-fragmentColumns,0);
-				a[j].addListener(this);
+				a[j] = subscribe(a[fragmentColumns-1].getNeighbor(1+j-fragmentColumns,0));
 			}
 			ff[i] = a;
 		}
 		fragmentColumns += count;
+	}
+
+	FragmentHolder subscribe(FragmentHolder f)
+	{
+		if (f != null) {
+			f.addListener(this);
+		}
+		return f;
+	}
+
+	boolean canExpandWest()
+	{
+		return ff[0][0].hasNeighbor(-1,0);
+	}
+
+	boolean canExpandNorth()
+	{
+		return ff[0][0].hasNeighbor(0,-1);
+	}
+
+	boolean canExpandSouth()
+	{
+		return ff[ff.length-1][0].hasNeighbor(0,1);
+	}
+
+	boolean canExpandEast()
+	{
+		return ff[0][fragmentColumns-1].hasNeighbor(1,0);
 	}
 
 	void expandWest(int count)
@@ -194,8 +227,7 @@ public class MandelbrotView extends JComponent
 			ff[i] = a;
 
 			for (int j = 0; j < count; j++) {
-				ff[i][j] = ff[i][j+count].neighbor(-count+j,0);
-				ff[i][j].addListener(this);
+				ff[i][j] = subscribe(ff[i][j+count].getNeighbor(-count+j,0));
 			}
 		}
 		offsetX -= count*FSIZE;
@@ -212,30 +244,30 @@ public class MandelbrotView extends JComponent
 		gr.setColor(Color.WHITE);
 		gr.fillRect(INSETS.left, INSETS.top, cx, cy);
 
-		while (cx/2 + offsetX + FSIZE <= 0) {
+		while (cx/2 + offsetX + FSIZE <= 0 && fragmentColumns >= 2) {
 			shrinkWest(1);
 		}
-		while (cx/2 + offsetX > 0) {
+		while (cx/2 + offsetX > 0 && canExpandWest()) {
 			expandWest(1);
 		}
-		while (cy/2 + offsetY + FSIZE <= 0) {
+		while (cy/2 + offsetY + FSIZE <= 0 && fragmentRows >= 2) {
 			shrinkNorth(1);
 		}
-		while (cy/2 + offsetY > 0) {
+		while (cy/2 + offsetY > 0 && canExpandNorth()) {
 			expandNorth(1);
 		}
 
-		while (cx/2 + offsetX + FSIZE*fragmentColumns < cx) {
+		while (cx/2 + offsetX + FSIZE*fragmentColumns < cx && canExpandEast()) {
 			expandEast(1);
 		}
-		while (cx/2 + offsetX + FSIZE*fragmentColumns - FSIZE >= cx) {
+		while (cx/2 + offsetX + FSIZE*fragmentColumns - FSIZE >= cx && fragmentColumns >= 2) {
 			shrinkEast(1);
 		}
 
-		while (cy/2 + offsetY + FSIZE*fragmentRows < cy) {
+		while (cy/2 + offsetY + FSIZE*fragmentRows < cy && canExpandSouth()) {
 			expandSouth(1);
 		}
-		while (cy/2 + offsetY + FSIZE*fragmentRows - FSIZE >= cy) {
+		while (cy/2 + offsetY + FSIZE*fragmentRows - FSIZE >= cy && fragmentRows >= 2) {
 			shrinkSouth(1);
 		}
 
@@ -252,8 +284,13 @@ public class MandelbrotView extends JComponent
 
 	void drawFragment(Graphics gr, FragmentHolder f, int x, int y)
 	{
-		assert f.m.width == FSIZE;
-		assert f.m.height == FSIZE;
+		if (f == null) {
+			gr.setColor(new Color(0xee,0xee,0xff));
+			gr.fillRect(x, y, FSIZE*vscale, FSIZE*vscale);
+			return;
+		}
+
+		assert f != null;
 
 		BufferedImage img = new BufferedImage(FSIZE, FSIZE, BufferedImage.TYPE_INT_RGB);
 		for (int i = 0; i < FSIZE; i++) {

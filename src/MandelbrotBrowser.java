@@ -14,12 +14,19 @@ public class MandelbrotBrowser extends JFrame
 		JPanel buttonPane = new JPanel();
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
 
-		JButton b1 = new JButton("Refine");
+		JButton b1 = new JButton("Zoom In");
 		b1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent evt) {
-				v.refine();
+				v.zoomIn();
 			}});
 		buttonPane.add(b1);
+
+		JButton b2 = new JButton("Reset");
+		b2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent evt) {
+				v.reset();
+			}});
+		buttonPane.add(b2);
 
 		pack();
 		setLocationRelativeTo(null);
