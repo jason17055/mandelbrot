@@ -1,0 +1,5 @@
+To build-
+Create a subdirectory "extlib", then download apfloat.jar
+(from www.apfloat.org/apfloat_java/download.html) into it.
+
+Then type `ant' and press Enter.
