@@ -32,6 +32,8 @@ public class MandelbrotFragment
 		else { return UNKNOWN; }
 	}
 
+	static MandelbrotCompute compute = new MandelbrotCompute();
+
 	FixedPrecisionApcomplexHelper precisionHelper =
 			new FixedPrecisionApcomplexHelper(32);
 
@@ -160,7 +162,7 @@ public class MandelbrotFragment
 		Apfloat fx = originX.add(scale.multiply(new Apfloat(x)));
 		Apfloat fy = originY.add(scale.multiply(new Apfloat(y)));
 
-		members[y][x] = checkMandelbrot(
+		members[y][x] = compute.check(
 			new Apcomplex(fx, fy)
 			);
 	}
@@ -173,7 +175,7 @@ public class MandelbrotFragment
 
 		for (int x = x0; x < x1; x++) {
 			Apfloat fx = originX.add(scale.multiply(new Apfloat(x)));
-			members[y][x] = checkMandelbrot(
+			members[y][x] = compute.check(
 				new Apcomplex(fx, fy)
 				);
 			if (x == x0) {
@@ -199,7 +201,7 @@ public class MandelbrotFragment
 
 		for (int y = y0; y < y1; y++) {
 			Apfloat fy = originY.add(scale.multiply(new Apfloat(y)));
-			members[y][x] = checkMandelbrot(
+			members[y][x] = compute.check(
 				new Apcomplex(fx, fy)
 				);
 			if (y == y0) {
@@ -215,23 +217,6 @@ public class MandelbrotFragment
 			}
 		}
 		return sum;
-	}
-
-	static final int ESCAPE_THRESHOLD = 50;
-
-	byte checkMandelbrot(Apcomplex c)
-	{
-		if (c.real().compareTo(ONE) > 0) return 1;
-
-		Apcomplex z = Apcomplex.ZERO;
-		for (int i = 0; i < ESCAPE_THRESHOLD; i++) {
-			z = precisionHelper.multiply(z, z).add(c);
-			if (z.real().compareTo(TWO) > 0 ||
-				z.imag().compareTo(TWO) > 0) {
-				return (byte)(i % BANDS);
-			}
-		}
-		return YES;
 	}
 
 	void makeProbably()
