@@ -43,7 +43,8 @@ class FragmentHolder
 		this.originY = originY;
 		this.size = size;
 
-		new FragmentGen(this).execute();
+		this.generator = new FragmentGen(this);
+		this.generator.execute();
 	}
 
 	boolean hasNeighbor(int dx, int dy)
@@ -188,6 +189,7 @@ class FragmentHolder
 		public void fragmentReady(FragmentHolder f);
 	}
 	Listener listener;
+	FragmentGen generator;
 
 	static enum HolderState
 	{
@@ -223,7 +225,8 @@ class FragmentHolder
 					h.originX,
 					h.originY,
 					h.size,
-					FSIZE, FSIZE);
+					FSIZE);
+				f.generate();
 			}
 			return f;
 		}

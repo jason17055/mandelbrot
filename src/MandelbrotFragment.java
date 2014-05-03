@@ -31,17 +31,15 @@ public class MandelbrotFragment
 	{
 	}
 
-	public MandelbrotFragment(Apfloat re0, Apfloat im0, Apfloat size, int width, int height)
+	public MandelbrotFragment(Apfloat re0, Apfloat im0, Apfloat size, int pixelWidth)
 	{
 		assert width == height;
 
 		this.originX = re0;
 		this.originY = im0;
-		this.scale = size.divide(new Apfloat(width));
-		this.width = width;
-		this.height = height;
-
-		generate();
+		this.scale = size.divide(new Apfloat(pixelWidth));
+		this.width = pixelWidth;
+		this.height = pixelWidth;
 	}
 
 	void generate()
