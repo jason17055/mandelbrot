@@ -17,12 +17,20 @@ public class MandelbrotFragment
 	static final byte YES = -1; //in the set
 	static final byte NO = 0;
 	static final byte MIXED = 64;
+	static final byte UNKNOWN = 65;
 
 	static final int BANDS = 64;
 
 	static final Apfloat ONE = new Apfloat(1);
 	static final Apfloat TWO = new Apfloat(2);
 	static final Apfloat MINUS_TWO_PT_FIVE = new Apfloat(-2.5);
+
+	static byte known(byte b)
+	{
+		if (b == YES) { return b; }
+		else if (b >= 0 && b < 64) { return NO; }
+		else { return UNKNOWN; }
+	}
 
 	FixedPrecisionApcomplexHelper precisionHelper =
 			new FixedPrecisionApcomplexHelper(32);
@@ -40,6 +48,68 @@ public class MandelbrotFragment
 		this.scale = size.divide(new Apfloat(pixelWidth));
 		this.width = pixelWidth;
 		this.height = pixelWidth;
+	}
+
+	void generateFromParent(FragmentParentIfc p)
+	{
+		this.members = new byte[height][width];
+
+		for (int i = 0; i < height; i+=2) {
+			for (int j = 0; j < width; j+=2) {
+
+				// check neighbor pixels from parent
+				byte b1 = known(p.get(j/2 - 1, i/2 + 1));
+				byte b2 = known(p.get(j/2,     i/2 + 1));
+				byte b3 = known(p.get(j/2 + 1, i/2 + 1));
+				byte b4 = known(p.get(j/2 - 1, i/2));
+				byte b5 = known(p.get(j/2, i/2));
+				byte b6 = known(p.get(j/2 + 1, i/2));
+				byte b8 = known(p.get(j/2,     i/2 - 1));
+				byte b9 = known(p.get(j/2 + 1, i/2 - 1));
+
+				// copy one pixel directly from parent
+				if (b5 != UNKNOWN) {
+					members[i][j] = b5;
+				}
+				else {
+					generatePixel(j,i);
+				}
+
+				if (b5 != UNKNOWN &&
+					b5 == b8 && b5 == b9 && b5 == b6 &&
+					b5 == b2 && b5 == b3)
+				{
+					members[i][j+1] = members[i][j];
+				}
+				else {
+					generatePixel(j+1,i);
+				}
+
+				if (b5 != UNKNOWN &&
+					b5 == b4 && b5 == b6 && b5 == b1 &&
+					b5 == b2 && b5 == b3)
+				{
+					members[i+1][j] = members[i][j];
+				}
+				else {
+					generatePixel(j, i+1);
+				}
+
+				if (b5 != UNKNOWN &&
+					b5 == b6 && b5 == b2 && b5 == b3)
+				{
+					members[i+1][j+1] = members[i][j];
+				}
+				else {
+					generatePixel(j+1, i+1);
+				}
+			}
+		}
+
+		makeProbably();
+		makeProbably();
+		makeMixed();
+		makeMixed();
 	}
 
 	void generate()
@@ -83,6 +153,16 @@ public class MandelbrotFragment
 				members[y][x] = b;
 			}
 		}
+	}
+
+	void generatePixel(int x, int y)
+	{
+		Apfloat fx = originX.add(scale.multiply(new Apfloat(x)));
+		Apfloat fy = originY.add(scale.multiply(new Apfloat(y)));
+
+		members[y][x] = checkMandelbrot(
+			new Apcomplex(fx, fy)
+			);
 	}
 
 	byte generateRow(int y, int x0, int x1)

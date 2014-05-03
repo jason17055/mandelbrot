@@ -198,6 +198,21 @@ class FragmentHolder
 		READY;
 	}
 
+	FragmentParentIfc makeParentIfc()
+		throws Exception
+	{
+		assert parent != null;
+
+		// blocks if parent hasn't finished generating
+		MandelbrotFragment pF = parent.generator.get();
+
+		return new FragmentParentIfc(
+			pF,
+			parentX * FSIZE/2,
+			parentY * FSIZE/2
+			);
+	}
+
 	static class FragmentGen extends SwingWorker<MandelbrotFragment,Object>
 	{
 		FragmentHolder h;
@@ -210,7 +225,7 @@ class FragmentHolder
 
 		@Override
 		public MandelbrotFragment doInBackground()
-			throws IOException
+			throws Exception
 		{
 			File fl = getFragmentFile(h.address);
 			if (fl.exists()) {
@@ -219,6 +234,14 @@ class FragmentHolder
 					);
 				f = MandelbrotFragment.readFrom(in, FSIZE);
 				in.close();
+			}
+			else if (h.parent != null) {
+				f = new MandelbrotFragment(
+					h.originX,
+					h.originY,
+					h.size,
+					FSIZE);
+				f.generateFromParent(h.makeParentIfc());
 			}
 			else {
 				f = new MandelbrotFragment(
