@@ -1,0 +1,4 @@
+Thoughts on using primitive doubles-
+* double provides 53 bits of precision
+* at depth 0 (128 values spread over [-4,4]) needs 7 bits of precision
+* so 53-bits of precision allows precise values up to depth 46

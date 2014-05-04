@@ -31,17 +31,18 @@ class FragmentHolder
 		FragmentHolder f = new FragmentHolder(
 			new Apfloat(-4),
 			new Apfloat(-4),
-			new Apfloat(8)
+			new Apfloat(8),
+			new FragmentAddress(0,0,0)
 			);
-		f.address = new FragmentAddress(0,0,0);
 		return f;
 	}
 
-	protected FragmentHolder(Apfloat originX, Apfloat originY, Apfloat size)
+	protected FragmentHolder(Apfloat originX, Apfloat originY, Apfloat size, FragmentAddress addr)
 	{
 		this.originX = originX;
 		this.originY = originY;
 		this.size = size;
+		this.address = addr;
 
 		this.generator = new FragmentGen(this);
 		this.generator.execute();
@@ -118,11 +119,6 @@ class FragmentHolder
 		}
 
 		FragmentHolder f = createInnerQuadrant(mx, my);
-		f.address = new FragmentAddress(
-			this.address.depth+1,
-			this.address.x * BRANCHING_FACTOR + mx,
-			this.address.y * BRANCHING_FACTOR + my
-			);
 		children[i] = new WeakReference<FragmentHolder>(f);
 		return f;
 	}
@@ -134,7 +130,13 @@ class FragmentHolder
 		FragmentHolder h = new FragmentHolder(
 			originX.add(hsize.multiply(new Apfloat(ax))),
 			originY.add(hsize.multiply(new Apfloat(ay))),
-			hsize);
+			hsize,
+			new FragmentAddress(
+				this.address.depth+1,
+				this.address.x * BRANCHING_FACTOR + ax,
+				this.address.y * BRANCHING_FACTOR + ay
+			)
+			);
 		h.state = HolderState.ZOOM;
 		h.setParent(this, ax, ay);
 		return h;
@@ -223,19 +225,37 @@ class FragmentHolder
 			this.h = h;
 		}
 
+		boolean tryLoad(File fl)
+		{
+			try {
+
+			InputStream in = new BufferedInputStream(
+				new FileInputStream(fl)
+				);
+			f = MandelbrotFragment.readFrom(in, FSIZE);
+			in.close();
+
+			return true;
+
+			}
+			catch (IOException e) {
+				System.err.println("Warning: error loading fragment "+fl + " ("+e.getMessage()+")");
+				return false;
+			}
+		}
+
 		@Override
 		public MandelbrotFragment doInBackground()
 			throws Exception
 		{
 			File fl = getFragmentFile(h.address);
 			if (fl.exists()) {
-				InputStream in = new BufferedInputStream(
-					new FileInputStream(fl)
-					);
-				f = MandelbrotFragment.readFrom(in, FSIZE);
-				in.close();
+				if (tryLoad(fl)) {
+					return f;
+				}
 			}
-			else if (h.parent != null) {
+
+			if (h.parent != null) {
 				f = new MandelbrotFragment(
 					h.originX,
 					h.originY,
@@ -256,6 +276,18 @@ class FragmentHolder
 
 		@Override
 		protected void done() {
+
+			// detect uncaught exception
+			try {
+				get();
+			}
+			catch (Exception e) {
+				throw new Error("Unexpected: " + e, e);
+			}
+
+			assert f != null;
+			assert f.members != null;
+
 			h.m = f;
 			h.state = HolderState.READY;
 			h.fireReady();
@@ -267,6 +299,8 @@ class FragmentHolder
 	static File cacheDir = new File("cache");
 	static File getFragmentFile(FragmentAddress a)
 	{
+		assert a != null;
+
 		return new File(cacheDir,
 			String.format("%d_%d,%d.dat",
 			a.depth,
