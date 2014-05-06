@@ -97,6 +97,9 @@ public class MandelbrotView extends JComponent
 			return;
 		}
 
+		offsetX -= ff[0][0].parentX * FSIZE;
+		offsetY -= ff[0][0].parentY * FSIZE;
+
 		unsubscribeAll();
 
 		fragmentRows = (fragmentRows+1) / 2;
