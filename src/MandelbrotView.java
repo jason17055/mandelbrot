@@ -16,7 +16,6 @@ public class MandelbrotView extends JComponent
 	int fragmentColumns = 1;
 	int fragmentRows = 1;
 	FragmentHolder [][] ff;
-	Apfloat fsize = new Apfloat(1.0);
 
 	public MandelbrotView()
 	{
@@ -85,7 +84,6 @@ public class MandelbrotView extends JComponent
 		fragmentRows *= 2;
 		fragmentColumns *= 2;
 		ff = aa;
-		fsize = ff[0][0].size;
 		offsetX *= 2;
 		offsetY *= 2;
 
@@ -112,7 +110,6 @@ public class MandelbrotView extends JComponent
 		}
 
 		ff = aa;
-		fsize = ff[0][0].size;
 		offsetX /= 2;
 		offsetY /= 2;
 
